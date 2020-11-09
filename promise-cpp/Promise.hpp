@@ -3,6 +3,7 @@
 #define __PROMISE_HPP__
 
 #include <functional>
+#include <iostream>
 
 #include "PromiseLoop.h"
 
@@ -49,16 +50,32 @@ namespace Promise
 		using _ResolveFuncType = std::function<void()>;
 
 		PromiseStatus m_status;
+		std::vector<Promise<void>> m_resolveChain;
+		std::vector<Promise<void>> m_rejectChain;
+		std::function<void(_ResolveFuncType&&)> m_func;
+		bool m_voidFlag;
+		bool m_resolveFlag;
+		bool m_rejectFlag;
 
-		inline void DefaultResolveVoid() { this->m_status = PromiseStatus::eFulfilled; std::cout << "OnResolve" << std::endl; }
-		inline void DefaultRejectVoid() { this->m_status = PromiseStatus::eRejected; }
+		inline void _DefaultResolveVoid() { this->m_status = PromiseStatus::eFulfilled; std::cout << "OnResolve" << std::endl; }
+		inline void _DefaultRejectVoid() { this->m_status = PromiseStatus::eRejected; }
+
+		inline void _InternalInvoke()
+		{
+			m_func(std::bind(&Promise::_DefaultResolveVoid, this));
+		}
 
 	public:
-		Promise(std::function<void(_ResolveFuncType&&)>&& func) :m_status(PromiseStatus::ePending)
+		explicit Promise(std::function<void(_ResolveFuncType&&)>&& func) :m_status(PromiseStatus::ePending),
+			m_func(func), m_resolveFlag(true)
 		{
-			func(std::bind(&Promise::DefaultResolveVoid, this));
 
+		}
+
+		template<typename _ThenRet>
+		Promise<_ThenRet>& Then(std::function<_ThenRet()>&& func)
+		{
 		}
 	};
 }
-#endif
+#endif // !__PROMISE_HPP__

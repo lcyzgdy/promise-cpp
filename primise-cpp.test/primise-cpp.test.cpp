@@ -20,4 +20,7 @@ int main()
 		std::cout << "Hello World!\n";
 		resolve();
 	});
+	a.Then<void>([]()->void {
+		cout << "Then test1" << endl;
+	});
 }
